@@ -1,7 +1,6 @@
 class BooksController < ApplicationController
   def top
   end
-# topはhomes_controllerを作ってそこで定義すればいいのか？遷移自体はうまく行っているから機能には問題なし
 
   def index
   	@books = Book.all
@@ -9,15 +8,17 @@ class BooksController < ApplicationController
   end
 
   def create
-  	book = Book.new(book_params)
-  	if book.save
+  	@book = Book.new(book_params)
+  	if @book.save
   	   flash[:notice] = "Book was successfully created."
-  	   redirect_to book_path(book.id)
+  	   redirect_to book_path(@book.id)
   	else
        @books = Book.all
-  	   redirect_to books_path
-       # renderだとうまくいかない？indexの繰り返し処理の@booksがnilになっている？復習する
+       render :index
+       # renderだとうまくいかない？indexの繰り返し処理の@booksがnilになっている？
        # redirect_toにするとindexに遷移するようになったが、error_messageが表示されない
+       # 【解決】インスタンス変数には@をつけないといけなかった → index.html.erbで表示するには@をつけないといけないから。
+       # elseの下で再度@booksのデータを取得しなければ、index.html.erbのeach文のところが表示できない。だからundefined method `each' for nil:NilClassとエラーが表示された。
   	end
   end
 
@@ -30,13 +31,15 @@ class BooksController < ApplicationController
   end
 
   def update
-  	book = Book.find(params[:id])
-  	if book.update(book_params)
+  	@book = Book.find(params[:id])
+  	if @book.update(book_params)
   	   flash[:notice] = "Book was successfully updated."
-  	   redirect_to book_path(book.id)
+  	   redirect_to book_path(@book.id)
   	else
-  		render :show
+  		render :edit
       # ここもredirect_toで指定して遷移させればいいのか？
+      # 【解決】インスタンス変数には@をつけないといけなかった → edit.html.erbで表示するには@をつけないといけないから。
+      # @book = Book.find(params[:id])で保存失敗前に既にデータをインスタンス変数@bookに代入しているので、createアクションと違いelseの下でわざわざ再度データを取り出す必要はなく、renderのみでよい。
   	end
   end
 
